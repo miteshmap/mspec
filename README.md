@@ -5,6 +5,12 @@ into tasks, build it, then fold the result into living docs. Each stage is one C
 (`.claude/skills/mspec-*`) and writes **one file**, so the requirements for a feature are always
 three files in one folder.
 
+## Installation
+
+```bash
+npx skills add miteshmap/mspec
+```
+
 ## Workflow
 
 ```
