@@ -67,10 +67,13 @@ Spec ids are the ticket key when given (e.g. `PROJ-123`), otherwise the next 3-d
 2. **Plan**: check the Decisions and the Implementation file list. Wrong paths or approach? Fix
    them now; tasks copy them verbatim.
 3. **Tasks**: generating tasks sets spec and plan to `Approved`. Edit the spec or plan later and
-   they drop back to `Draft`; re-run `/mspec-tasks` (completed tasks keep their IDs).
+   they drop back to `Draft`; re-run `/mspec-tasks` (completed tasks keep their IDs). Each task
+   is tagged with a matching skill your agent has (`Skill:`), and independent tasks may suggest a
+   subagent (`Agent:`).
 4. **Implement**: tasks are checked `[x]` only after they are verified, so you can stop at any
    time and resume. Each story ends with a Verify task; manual checks are handed to you to confirm.
-   Nothing is committed unless you ask.
+   A task's skill is loaded before it is built. If tasks suggest subagents, you are asked whether
+   to use them. Nothing is committed unless you ask.
 5. **Archive**: merges what was actually built into `docs/`, proposes constitution amendments,
    and moves the spec folder to `archive/`.
 
@@ -108,6 +111,10 @@ IDs link the files together, so nothing needs a separate checklist:
 - Keep the spec free of "how"; put technical direction in the `/mspec-plan` input instead.
 - Tests are only planned and tasked if the plan's Technical Context puts them in scope, or you
   pass `include tests` to `/mspec-tasks`.
-- Project conventions (commands, lint, review agents, commit style) come from `CLAUDE.md`, not
-  from the skills, so the skills stay stack-agnostic.
+- Project conventions (commands, lint, review agents, commit style) come from your agent's
+  instruction files (`CLAUDE.md`, `AGENTS.md`, `.github/copilot-instructions.md`, …), not from the
+  skills, so the skills stay stack-agnostic.
+- Task skills come from what your agent has: its loaded skills, skill folders (`.claude/skills`,
+  `.github/skills`, `.agents/skills`) and any mapping in the instruction files ("use X for Y").
+  Add such a mapping when the right skill isn't obvious from its description.
 - Templates live in each skill's `assets/` folder; change them there, not in generated files.

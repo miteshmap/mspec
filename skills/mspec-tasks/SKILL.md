@@ -12,7 +12,9 @@ the plan.
 
 - **Input**: `$ARGUMENTS`, the spec path or id, optionally with notes ("include tests").
   Empty → the most recently modified `.mspec/specs/*/plan.md`.
-- **Reads**: `spec.md` and `plan.md` only. No plan → stop and suggest running mspec-plan.
+- **Reads**: `spec.md` and `plan.md`; for current agent's skills and subagents
+  and the project instruction files (see Skill discovery). No plan → stop and suggest running
+  mspec-plan.
 - **Writes**: `tasks.md` in the same directory, from [the template](assets/tasks-template.md).
 
 ## Rules
@@ -24,6 +26,8 @@ the plan.
   add the task with `(not in plan)` and flag it in the report.
 - Tests: add test tasks only if the plan's Technical Context (or the user's input) says tests are
   in scope. Then each story's test tasks come before its implementation tasks.
+- Skill and agent names come only from Skill discovery; never invent them, and never tag `mspec-*`
+  skills. When nothing clearly fits a task, leave it untagged: a wrong skill is worse than none.
 
 ## Asking questions
 
@@ -38,6 +42,26 @@ otherwise flag gaps in the report.
   in simpler words with a concrete example per option.
 - **Limits**: max 4 options per question (tool limit), max 3 questions per run.
 
+## Skill discovery
+
+Tasks are tagged with skills the agent running mspec (Claude Code, Copilot, Codex, Cursor, …) can
+actually use. Build a catalog (name, description, source) from these sources, in order, using
+whichever exist:
+
+1. **Session**: the skills and subagents the running agent already exposes (e.g. Claude Code's
+   available skills and agents). These come first because mspec-implement can invoke them.
+2. **Instruction files** that map work to skills: `CLAUDE.md`, `AGENTS.md`,
+   `.github/copilot-instructions.md`, `.github/instructions/*.instructions.md` (respect their
+   `applyTo` globs), `GEMINI.md`, `.cursor/rules/*`. An explicit mapping ("use X for module code")
+   beats a description match.
+3. **Skill folders**: `.claude/skills/*/SKILL.md`, `~/.claude/skills/*/SKILL.md`,
+   `.github/skills/*/SKILL.md`, `.agents/skills/*/SKILL.md`. Read only the frontmatter `name` and
+   `description`.
+4. **Subagents**, for `[P]` suggestions only: the session's agent list, `.claude/agents/*.md`,
+   `.github/agents/*.md`.
+
+No skills found → skip tagging and say so in the report.
+
 ## Steps
 
 1. **Locate.** Resolve the feature directory. If `tasks.md` exists, update it: keep completed
@@ -47,9 +71,10 @@ otherwise flag gaps in the report.
 2. **Load.** From the spec: user stories with priorities and acceptance scenarios, FRs, SCs. From
    the plan: Technical Context (dependencies, tests), Data Model, Interfaces, Implementation
    (Foundation, US#, Cross-cutting, Deferred) and Verification. If a clarification the plan
-   defers is now answered in the spec, flag that the plan needs a re-run.
+   defers is now answered in the spec, flag that the plan needs a re-run. Run Skill discovery.
 
-3. **Generate** tasks phase by phase, following the task guide below.
+3. **Generate** tasks phase by phase, following the task guide below, and tag each task with
+   its skill.
 
 4. **Validate**, fix, and re-check until all pass:
    - [ ] Every file line in the plan's Implementation has at least one task.
@@ -60,6 +85,8 @@ otherwise flag gaps in the report.
    - [ ] Every task has an ID, a file path (except Verify/Run tasks) and the right labels.
    - [ ] `[P]` tasks touch different files and depend on nothing unfinished.
    - [ ] No task depends on a later task or on another story (except Foundation).
+   - [ ] Every `Skill:` and `Agent:` name is in the discovery catalog; no `mspec-*` skills.
+   - [ ] `Agent:` appears only on `[P]` tasks with no `after T###`.
 
 5. **Write** `tasks.md`, set Status to `Approved` in `spec.md` and `plan.md` (generating tasks is
    the approval point), and report (see below).
@@ -80,6 +107,11 @@ otherwise flag gaps in the report.
 - Quotes the plan's constraints exactly (types, lengths, allowed values, permissions, error
   cases) instead of "add validation".
 - Adds `after T###` only when the dependency isn't the previous task.
+- Ends with ``Skill: `<name>` `` (max 2, comma-separated) when a skill clearly matches the task's
+  file type and action (e.g. a module service → a backend skill, a template → a frontend skill),
+  not merely the feature's topic. Verify and Run checks tasks may name a test or review skill.
+- A `[P]` task with no `after` may add ``Agent: `<name>` ``: a subagent that could run it in
+  parallel. This is only a suggestion; the user decides at implement time whether to use it.
 
 ## Report
 
@@ -87,6 +119,8 @@ Keep it short:
 
 - **Tasks**: path, total count, count per phase, how many `[P]`
 - **MVP**: Foundation + US1 (task range)
+- **Skills**: sources used, each tagged skill with its task count, untagged tasks, tasks with an
+  `Agent:` suggestion (or "none found")
 - **Flags**: `(not in plan)` tasks, spec/plan gaps or contradictions, Deferred tasks and what
   blocks them
 - **Next**: mspec-implement, starting with Foundation
