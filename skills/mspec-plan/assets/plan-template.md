@@ -43,10 +43,12 @@ feeds, CLI commands, external calls. Remove if none.>
 - `<path>` (new | modify): <what changes>
 
 ### US1 — <Title> (P1)
-**Covers**: FR-001, FR-002
-- `<path>` (new | modify): <what changes>
+**Covers**: FR-001, FR-002 | **Flows**: main, 2a, *a
+- `<path>` (new | modify): <what changes> (<flow step or extension, if not obvious>)
 
-**Verify**: <steps or tests proving the story's acceptance scenarios>
+**Verify**: one line per flow, with the test or exact steps and any data or setup it needs.
+- main: <...>
+- 2a: <...>
 
 ### US2 — <Title> (P2)
 <...>

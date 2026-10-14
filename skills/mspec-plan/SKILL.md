@@ -1,6 +1,6 @@
 ---
 name: mspec-plan
-description: Turn a feature spec into a technical implementation plan (`.mspec/specs/<id>-<short-name>/plan.md`) grounded in the actual codebase, covering decisions, data model, interfaces, and exact file changes per user story, checked against the constitution. Use when the user runs /mspec-plan or asks to plan, design or work out how to build a specified feature.
+description: Turn a feature spec into a technical implementation plan (`.mspec/specs/<id>-<short-name>/plan.md`) grounded in the actual codebase, covering decisions, data model, interfaces, and exact file changes and verification per user story and flow, checked against the constitution. Use when the user runs /mspec-plan or asks to plan, design or work out how to build a specified feature.
 compatibility: Designed for Claude Code; asks questions with the AskUserQuestion tool.
 ---
 
@@ -67,8 +67,8 @@ Every question goes through the `AskUserQuestion` tool, never as plain text in c
    the constitution, project instructions and existing code. Tag every item with the `FR-###` /
    `US#` it serves.
    - **Data model** (if the feature stores or changes data): entities from the spec's Key
-     Entities; fields and validation rules from the FRs and edge cases; state transitions from
-     the acceptance scenarios.
+     Entities; fields and validation rules from the FRs, extensions and edge cases; state
+     transitions from the stories' Pre/Post, flows and extensions.
    - **Interfaces** (if the feature exposes or consumes any): what users or other systems call
      or receive (routes, forms, APIs, permissions, events/hooks, feeds, CLI, external calls), in
      the form that fits the interface type. A machine-readable contract (e.g. an OpenAPI or
@@ -80,6 +80,8 @@ Every question goes through the `AskUserQuestion` tool, never as plain text in c
 7. **Validate**, fix, and re-check until all pass:
    - [ ] Every FR sits under exactly one of: a user story, Foundation, Deferred.
    - [ ] Every user story in the spec has a section.
+   - [ ] Every story's Flows list holds `main` and each of its extensions, and its Verify has a
+         line for each.
    - [ ] Every spec Key Entity has a Data Model entry.
    - [ ] Every FR implying input, output, access or an integration has an Interface.
    - [ ] Every Data Model entry and Interface is tagged and used by a story or Foundation.
@@ -100,7 +102,7 @@ Every question goes through the `AskUserQuestion` tool, never as plain text in c
 | **Decisions** | Non-obvious choices only: decision, why, rejected alternative. |
 | **Data Model** | Per entity: fields with exact types and constraints (required, length, allowed values, defaults), each tagged with its FR; relationships; state changes. Tasks quote these verbatim. |
 | **Interfaces** | Per interface: where it lives, inputs → outputs, access, error cases, and the FR / US it serves. |
-| **Implementation** | Every file change, one line each: `path` (new \| modify) and what changes. Grouped under **Foundation** (blocking, shared), **US#** in spec priority order (with the FRs it covers and how to verify it), and **Cross-cutting**. Keep stories independent; shared work goes in Foundation. |
+| **Implementation** | Every file change, one line each: `path` (new \| modify) and what changes. Grouped under **Foundation** (blocking, shared), **US#** in spec priority order (with the FRs it covers, its flows, and how to verify each flow), and **Cross-cutting**. Name the flow step or extension a change serves when the file line alone doesn't show it. Keep stories independent; shared work goes in Foundation. |
 | **Deferred** | Work blocked by an open clarification: the marker, the FRs it holds back, likely files. |
 | **Verification** | Lint / static analysis / test commands, and how each SC is shown. |
 | **Risks** | Real ones only, each with a mitigation. |

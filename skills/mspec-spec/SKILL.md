@@ -1,6 +1,6 @@
 ---
 name: mspec-spec
-description: Write or update a feature specification (`.mspec/specs/<id>-<short-name>/spec.md`) from a plain-language feature description, covering prioritized user stories, testable requirements and measurable success criteria, with no implementation details. Use when the user runs /mspec-spec or asks to spec out, specify or write requirements for a feature.
+description: Write or update a feature specification (`.mspec/specs/<id>-<short-name>/spec.md`) from a plain-language feature description, covering actors, prioritized user stories with step-by-step flows and their alternative and exception paths, testable requirements (including business rules) and measurable success criteria, with no implementation details. Use when the user runs /mspec-spec or asks to spec out, specify or write requirements for a feature.
 compatibility: Designed for Claude Code; asks questions with the AskUserQuestion tool.
 ---
 
@@ -56,7 +56,11 @@ Every question goes through the `AskUserQuestion` tool, never as plain text in c
    principle check and flag it.
 
 3. **Draft.** Pull actors, actions, data and constraints out of the description and fill the
-   template, following the section guide below.
+   template, following the section guide below. For each story, write the main flow first, then
+   walk it step by step and ask what can differ or fail there: missing or invalid input, empty
+   results, limits, permissions, slow or failed processing, a concurrent change, the actor
+   abandoning. Each case that matters becomes an extension with its expected behaviour; a case
+   that can happen at any step is `*a`, `*b`.
 
 4. **Unknowns.** Use a sensible default and record it under Assumptions. Mark
    `[NEEDS CLARIFICATION: <question>]` only when the answer changes scope, security/privacy or UX
@@ -66,7 +70,14 @@ Every question goes through the `AskUserQuestion` tool, never as plain text in c
 
 5. **Validate**, fix, and re-check (max 3 passes):
    - [ ] No implementation details; readable by a non-technical stakeholder.
-   - [ ] Every FR is testable, unambiguous and covered by an acceptance scenario.
+   - [ ] Every story has an actor, a numbered flow and an independent test; Pre and Post are
+         stated unless obvious.
+   - [ ] Every flow step was checked for what can differ or fail, and each case that matters is
+         an extension with expected behaviour.
+   - [ ] Every extension and every step that adds behaviour cites an FR; every FR is cited by a
+         step, an extension or a cross-story edge case.
+   - [ ] Every FR is testable and unambiguous; every business rule (limit, calculation,
+         eligibility, policy) is its own FR.
    - [ ] Success criteria are measurable and technology-agnostic.
    - [ ] Primary flows, edge cases, scope, dependencies and assumptions are covered.
 
@@ -81,9 +92,10 @@ Every question goes through the `AskUserQuestion` tool, never as plain text in c
 
 | Section | What to write |
 |---|---|
-| **User Stories** | Ordered P1, P2, … Each testable and shippable on its own (P1 alone is a usable MVP), with an independent test and Given/When/Then acceptance scenarios. |
-| **Edge Cases** | Boundaries, errors, empty states and permissions that matter here, with expected behaviour. |
-| **Functional Requirements** | `FR-###`, one testable MUST each. |
+| **Actors** | Everyone and everything that starts or takes part in a story: users by role, and external systems. Primary actors start stories; secondary ones take part. |
+| **User Stories** | Ordered P1, P2, … Each testable and shippable on its own (P1 alone is a usable MVP). Per story: why it matters, its actor, Pre (what must be true before) and Post (what is guaranteed on success), a numbered **Flow** of actor action → system response, **Extensions** keyed to the step they branch from (`2a`, `2b`; `*a` for any step), and an independent test. Flow and Extensions are the acceptance scenarios: write them as observable behaviour, never screens or components. A one-step story may have no extensions. |
+| **Edge Cases** | Only cases that span several stories (e.g. the feature is disabled, the account is suspended), with expected behaviour. Per-step cases belong in the story's Extensions. |
+| **Functional Requirements** | `FR-###`, one testable MUST each, for capabilities and business rules alike: a limit, calculation, eligibility condition or policy gets its own FR. |
 | **Key Entities** | Only if data is involved: what each represents, key attributes, relationships; no storage details. |
 | **Success Criteria** | `SC-###`, measurable (time, %, count) and user-facing: "Users export a year of invoices in under 10 seconds", not "API responds in 200 ms". |
 | **Assumptions & Scope** | Every default you chose, plus what is out of scope. |
@@ -93,7 +105,7 @@ Every question goes through the `AskUserQuestion` tool, never as plain text in c
 Keep it short:
 
 - **Spec**: path
-- **Stories**: title + priority, one line each
+- **Stories**: title + priority + actor, with its number of steps and extensions, one line each
 - **Flags**: checks still failing, open clarifications, constitution and doc-rule conflicts,
   missing constitution
 - **Next**: mspec-plan (open clarifications can stay open); mspec-constitution first if none exists

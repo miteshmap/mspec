@@ -58,7 +58,8 @@ The user must always see which task is in progress.
   ``▶ T### [US#] · <n>/<total> · <action> in `<path>` (FR-###)``, where the counts cover in-scope
   tasks only. After verification, print `✓ T### verified`, or `✗ T### failed: <reason>` at a stop
   point.
-- **Story checkpoint**: print `▶ US# checkpoint: verifying acceptance scenarios`.
+- **Story checkpoint**: print `▶ US# checkpoint: verifying flows <main, 2a, …>`, then one result
+  line, e.g. `US1 checkpoint: main ✓ 2a ✓ 3a ✗ (<reason>)`.
 - **Subagents**: when a task is handed off, mark it in progress and print
   `▶ T### → <agent> · <action>`.
 
@@ -98,8 +99,8 @@ The user must always see which task is in progress.
    `tasks.md`. This session verifies each result against the task done criteria and checks it
    off, so `tasks.md` keeps a single writer.
 
-3. **Story checkpoint.** At each story's Verify task, prove the acceptance scenarios (see story
-   done criteria). A story is done only when its Verify task passes. If it fails, stop that story;
+3. **Story checkpoint.** At each story's Verify task, prove every flow it names (see story done
+   criteria). A story is done only when its Verify task passes. If it fails, stop that story;
    do not start dependent work.
 
 4. **Feature completion.** When all in-scope tasks are checked, run Cross-cutting's checks and SC
@@ -121,14 +122,15 @@ The user must always see which task is in progress.
 - [ ] Related existing tests still pass. For a test task (tests first): the new test runs and
       fails for the expected reason before implementation, and passes after it.
 
-**Story**: the Verify task's scenarios pass, by automated tests where they exist, otherwise by
-running the feature the way the project runs (CLI, HTTP request, app, browser). If a scenario can
+**Story**: every flow the Verify task names passes (the main flow and each extension), and the
+story's Post holds after the main flow. Prove each by automated tests where they exist, otherwise
+by running the feature the way the project runs (CLI, HTTP request, app, browser). If a flow can
 only be checked by a person, give exact manual steps and ask the user to confirm; check it off only
 on confirmation.
 
 **Feature**: final audit, all must hold:
 - [ ] Every in-scope task is `[x]`; Deferred tasks are untouched.
-- [ ] Every in-scope FR and acceptance scenario in the spec is met by the code (re-read the spec
+- [ ] Every in-scope FR, flow and extension in the spec is met by the code (re-read the spec
       against the diff, not just the checkboxes).
 - [ ] Full project checks and tests pass (the "Run checks" task).
 - [ ] The diff touches only files in the plan or tasks (plus noted additions); no debug code,

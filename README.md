@@ -40,7 +40,7 @@ one is unclear.
 .mspec/
 ├── constitution.md              # Non-negotiable principles every spec/plan/task is checked against
 ├── specs/<id>-<short-name>/     # Features in progress
-│   ├── spec.md                  # What and why (user stories, FR-###, SC-###), no implementation
+│   ├── spec.md                  # What and why (actors, user stories with flows, FR-###, SC-###), no implementation
 │   ├── plan.md                  # How: decisions, data model, interfaces, file changes per story
 │   └── tasks.md                 # Ordered checklist T###, grouped by story; the progress record
 ├── archive/<id>-<short-name>/   # Finished specs, moved here unchanged by mspec-archive
@@ -62,8 +62,11 @@ Spec ids are the ticket key when given (e.g. `PROJ-123`), otherwise the next 3-d
 /mspec-archive PROJ-123
 ```
 
-1. **Spec**: review the user stories and FRs as a product owner would. Up to 3 open questions are
-   asked; any left unanswered stay as `[NEEDS CLARIFICATION]` and the plan works around them.
+1. **Spec**: review the user stories and FRs as a product owner would. Each story has an actor,
+   pre/postconditions, a numbered main flow and extensions for what can differ or fail at each
+   step (`2a`, `*a` for any step). Look hardest at the extensions: a missing one is behaviour
+   that won't be built or tested. Up to 3 open questions are asked; any left unanswered stay as
+   `[NEEDS CLARIFICATION]` and the plan works around them.
 2. **Plan**: check the Decisions and the Implementation file list. Wrong paths or approach? Fix
    them now; tasks copy them verbatim.
 3. **Tasks**: generating tasks sets spec and plan to `Approved`. Edit the spec or plan later and
@@ -71,9 +74,10 @@ Spec ids are the ticket key when given (e.g. `PROJ-123`), otherwise the next 3-d
    is tagged with a matching skill your agent has (`Skill:`), and independent tasks may suggest a
    subagent (`Agent:`).
 4. **Implement**: tasks are checked `[x]` only after they are verified, so you can stop at any
-   time and resume. Each story ends with a Verify task; manual checks are handed to you to confirm.
-   A task's skill is loaded before it is built. If tasks suggest subagents, you are asked whether
-   to use them. Nothing is committed unless you ask.
+   time and resume. Each story ends with a Verify task that walks its main flow and every
+   extension; manual checks are handed to you to confirm. A task's skill is loaded before it is
+   built. If tasks suggest subagents, you are asked whether to use them. Nothing is committed
+   unless you ask.
 5. **Archive**: merges what was actually built into `docs/`, proposes constitution amendments,
    and moves the spec folder to `archive/`.
 
@@ -101,6 +105,8 @@ reuse existing rules and flag conflicts. Only `/mspec-archive` writes to it:
 IDs link the files together, so nothing needs a separate checklist:
 
 - `US#`: user story (spec) → plan section → task phase
+- Flow step / extension (`2a`, `*a`): story flow (spec) → plan Flows and Verify lines → task
+  `flow 2a` → story checkpoint result
 - `FR-###`: functional requirement (spec) → data model / interface / file change (plan) → task
 - `SC-###`: success criterion (spec) → verification method (plan) → Verify task
 - `R#`: a rule in a capability doc, cited when a new spec conflicts with it

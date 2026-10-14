@@ -2,24 +2,37 @@
 
 **Status**: Draft | **Created**: <YYYY-MM-DD> | **Input**: "<user's feature description>"
 
+## Actors
+- **<Actor>** (primary | secondary): <who they are and what they can do here>
+
 ## User Stories
 
 ### US1 — <Title> (P1)
-<The journey in plain language and why it matters at this priority.>
+<Why this story matters at this priority, 1–2 sentences.>
+
+**Actor**: <name> | **Pre**: <what must be true before it starts> | **Post**: <state guaranteed
+when it succeeds>
+
+**Flow**:
+1. <Actor action> → <system response> (FR-###)
+2. <...>
+
+**Extensions**:
+- 2a. <what differs or fails at step 2> → <system behaviour> (FR-###)
+- *a. <what can happen at any step> → <system behaviour> (FR-###)
 
 **Independent test**: <How this story alone can be tested and what value it delivers.>
-
-**Acceptance**:
-1. **Given** <state>, **When** <action>, **Then** <outcome>
 
 ### US2 — <Title> (P2)
 <...>
 
 ## Edge Cases
-- <Boundary or error condition> → <expected behaviour>
+<Only cases that span several stories; per-step cases go in the story's Extensions. Remove if
+none.>
+- <Condition> → <expected behaviour> (FR-###)
 
 ## Functional Requirements
-- **FR-001**: <Actor/System> MUST <testable capability>
+- **FR-001**: <Actor/System> MUST <testable capability or business rule>
 - **FR-002**: <...> [NEEDS CLARIFICATION: <specific question>]
 
 ## Key Entities

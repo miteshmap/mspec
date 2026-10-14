@@ -57,7 +57,7 @@ Every question goes through the `AskUserQuestion` tool, never as plain text in c
      tasks recorded as Known Gaps.
    - Deferred tasks or open clarifications → they are recorded as Known Gaps; no question needed.
 
-2. **Reconcile.** Build the as-built picture: spec requirements and scenarios, plan decisions,
+2. **Reconcile.** Build the as-built picture: spec requirements, flows and extensions, plan decisions,
    data model and interfaces, task notes and additions, checked against the code. List anything
    specified but not built, or built differently.
 

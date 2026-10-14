@@ -68,7 +68,7 @@ No skills found → skip tagging and say so in the report.
    (`[x]`) tasks and their IDs, never renumber, and give new tasks the next free IDs. E.g. when a
    deferred clarification has been planned, move its tasks out of Deferred.
 
-2. **Load.** From the spec: user stories with priorities and acceptance scenarios, FRs, SCs. From
+2. **Load.** From the spec: user stories with priorities, flows and extensions, FRs, SCs. From
    the plan: Technical Context (dependencies, tests), Data Model, Interfaces, Implementation
    (Foundation, US#, Cross-cutting, Deferred) and Verification. If a clarification the plan
    defers is now answered in the spec, flag that the plan needs a re-run. Run Skill discovery.
@@ -81,7 +81,8 @@ No skills found → skip tagging and say so in the report.
    - [ ] Every FR has at least one task (or a Deferred task).
    - [ ] Every Data Model field and Interface appears in a task, constraints quoted exactly.
    - [ ] Every new dependency in the plan has an install/setup task in Foundation.
-   - [ ] Every story ends with a Verify task; Cross-cutting ends with checks and SC verification.
+   - [ ] Every story ends with a Verify task naming every flow in the plan's Flows list;
+         Cross-cutting ends with checks and SC verification.
    - [ ] Every task has an ID, a file path (except Verify/Run tasks) and the right labels.
    - [ ] `[P]` tasks touch different files and depend on nothing unfinished.
    - [ ] No task depends on a later task or on another story (except Foundation).
@@ -96,14 +97,15 @@ No skills found → skip tagging and say so in the report.
 | Phase | What goes in |
 |---|---|
 | **Foundation** | New dependencies first, then the plan's Foundation changes. No story label. Blocks all stories. |
-| **US#** (one per story, spec priority order; P1 marked MVP) | The plan's changes for that story, in build order: data → logic → interfaces → UI. Tests first if in scope. Last task: Verify, from the plan's Verify line. |
+| **US#** (one per story, spec priority order; P1 marked MVP) | The plan's changes for that story, in build order: data → logic → interfaces → UI. Tests first if in scope. Last task: Verify, naming each flow (`main, 2a, *a`) with its test or steps from the plan's Verify lines. |
 | **Cross-cutting** | The plan's Cross-cutting changes, then "Run checks" with the plan's commands, then one Verify task per SC. No story label. |
 | **Deferred** | The plan's Deferred items as tasks, each naming its blocking clarification. |
 
 **Each task:**
 - One action on one file (a tightly coupled pair is fine), small enough to finish and check in
   one go. Split a file change that serves several FRs into separate tasks.
-- Starts with a verb, names the file in backticks, ends with the FR(s) it serves.
+- Starts with a verb, names the file in backticks, ends with the FR(s) it serves, plus the flow
+  step or extension (`flow 2a`) when the plan names one.
 - Quotes the plan's constraints exactly (types, lengths, allowed values, permissions, error
   cases) instead of "add validation".
 - Adds `after T###` only when the dependency isn't the previous task.
