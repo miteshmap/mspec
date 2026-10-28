@@ -11,11 +11,22 @@ three files in one folder.
 npx skills add miteshmap/mspec
 ```
 
+Optionally, add the [spec status pane](#spec-status-pane) to Claude Code. At the prompt of a
+Claude Code terminal session:
+
+```text
+/plugin install mspec-status --marketplace miteshmap/mspec
+```
+
+Answer `y` to add the marketplace, then pick a scope (user scope loads it in every session).
+From a shell, the same is `claude plugin install mspec-status --marketplace miteshmap/mspec`. In
+the desktop app, click + next to the prompt box, then Plugins, Add marketplace with
+`miteshmap/mspec`, then Add plugin.
+
 ## Workflow
 
 ```
 /mspec-constitution  (once, then amend as needed)
-        │
 /mspec-spec ──► /mspec-plan ──► /mspec-tasks ──► /mspec-implement ──► /mspec-archive
  spec.md         plan.md         tasks.md          code + [x] tasks      docs/ + archive/
  what & why      how             checklist         verified build        as-built truth
@@ -24,6 +35,7 @@ npx skills add miteshmap/mspec
 | Command | Input (`$ARGUMENTS`) | Writes | Run when |
 |---|---|---|---|
 | `/mspec-constitution` | Principles to add or change (optional) | `constitution.md` | Setting up, or a project-wide rule changes |
+| `/mspec-guides` | `init`, `audit`, or a convention in plain language | `guides/*.md` | After the constitution, or when a pattern is adopted or retired |
 | `/mspec-spec` | Plain-language feature description, or a spec id to update | `specs/<id>-<name>/spec.md` | Starting a feature or changing its requirements |
 | `/mspec-plan` | Spec id (empty = latest), optional technical direction | `plan.md` | The spec is ready |
 | `/mspec-tasks` | Spec id (empty = latest), optional notes (`include tests`) | `tasks.md` | The plan is ready; this is the approval point |
@@ -99,6 +111,48 @@ reuse existing rules and flag conflicts. Only `/mspec-archive` writes to it:
   until a spec confirms them.
 - `/mspec-archive audit`: report stale rules, missing Code Map paths, undocumented code and
   contradictions. Changes nothing without asking.
+
+## Spec status pane
+
+`mspec-status` is an optional Claude Code mod (in [`mspec-status/`](mspec-status)) that shows
+where every feature stands without opening the files. In any project with a `.mspec/specs/`
+folder it opens a **Specs** pane beside the chat and puts a summary on the status line, e.g.
+`mspec: 1 implementing · 2 planned · 4 spec only · 1 implemented`.
+
+```text
+1/8 specs done · 1 implementing · 2 planned · 4 spec only · 1 implemented
+Running PROJ-123-order-export via /mspec-implement · just now
+
+Implementing (1)
+▶ PROJ-123-order-export ████████░░░░ 23/34
+Planned (2)
+▸ PROJ-124-saved-filters plan Draft
+…
+```
+
+Each spec is grouped by how far it has got, read from the files mspec writes:
+
+| Group | When |
+|---|---|
+| Implementing | `tasks.md` has some tasks checked `[x]`, not all |
+| Tasks ready | `tasks.md` exists, nothing checked yet |
+| Planned | `plan.md` exists (its `Status` is shown) |
+| Spec only | only `spec.md` (its `Status` is shown) |
+| Implemented | every task checked, or the spec's `Status` is `Implemented` |
+| Archived | the folder is in `.mspec/archive/` |
+
+- Press a row to expand it: the spec's title, spec and plan status, and progress per
+  `tasks.md` section (Foundation, US1, US2, …).
+- Running `/mspec-spec`, `/mspec-plan`, `/mspec-tasks`, `/mspec-implement` or `/mspec-archive`
+  with a spec id, or editing a file under `.mspec/specs/<id>/`, marks that spec **Running**
+  until the turn ends, then **Last worked on**.
+- It rescans after edits to `.mspec/`, at the end of each turn and every minute.
+- `/mspec-status` reopens the pane. It opens by itself at session start when the terminal is
+  wide enough to dock it (144 columns); in a narrower terminal, run `/mspec-status`.
+
+The pane only reads files; it never changes your specs. To try a local copy without installing,
+start Claude Code with `claude --plugin-dir <path to>/mspec-status`; its test runs with
+`claude plugin test mspec-status`.
 
 ## Traceability
 

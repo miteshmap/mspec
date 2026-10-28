@@ -1,0 +1,6 @@
+{
+  "name": "mspec-status",
+  "version": "0.1.0",
+  "description": "A pane and status line showing each .mspec spec's stage (spec, plan, tasks, implementing, done) and task progress",
+  "types": "./types/index.d.ts"
+}

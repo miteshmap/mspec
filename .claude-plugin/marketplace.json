@@ -1,0 +1,11 @@
+{
+  "name": "mspec",
+  "owner": { "name": "Mitesh Patel" },
+  "plugins": [
+    {
+      "name": "mspec-status",
+      "source": "./mspec-status",
+      "description": "A Claude Code pane and status line showing each .mspec spec's stage and task progress"
+    }
+  ]
+}
