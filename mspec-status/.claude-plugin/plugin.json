@@ -1,6 +1,7 @@
 {
   "name": "mspec-status",
-  "version": "0.1.0",
-  "description": "A pane and status line showing each .mspec spec's stage (spec, plan, tasks, implementing, done) and task progress",
+  "version": "0.2.0",
+  "description": "Current working spec, task progress and user story in the status line, with a pane for all specs",
+  "author": { "name": "Mitesh Patel" },
   "types": "./types/index.d.ts"
 }
