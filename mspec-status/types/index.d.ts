@@ -6,7 +6,12 @@ export type Stage =
   | 'planned'
   | 'spec'
 
-export type Section = { name: string; done: number; total: number }
+export type Section = {
+  name: string
+  done: number
+  total: number
+  taskIds: string[]
+}
 
 export type Spec = {
   id: string
@@ -18,6 +23,7 @@ export type Spec = {
   total: number
   sections: Section[]
   stage: Stage
+  modifiedAt: number
 }
 
 // The spec an mspec skill or an edit under `.mspec/specs/<id>/` touched last.
@@ -26,6 +32,8 @@ export type Active = {
   via: string
   at: number
   isRunning: boolean
+  story?: string
+  task?: string
 }
 
 declare module 'claude-code' {

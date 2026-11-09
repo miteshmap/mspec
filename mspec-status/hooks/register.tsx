@@ -11,12 +11,12 @@ const REFRESH_MS = 60_000
 // Change a tag when that value's fields change: it declines what an earlier
 // version stored, which outlives a reload.
 const specs = atom({ plugin: 'mspec-status', key: 'specs' } as const, [], {
-  shape: 'specs-1',
+  shape: 'specs-2',
 })
 const active = atom(
   { plugin: 'mspec-status', key: 'active' } as const,
   null as Active | null,
-  { shape: 'active-1' },
+  { shape: 'active-2' },
 )
 const expanded = atom(
   { plugin: 'mspec-status', key: 'expanded' } as const,
@@ -51,7 +51,7 @@ const COLOR: Record<Stage, string> = {
   archived: 'success',
 }
 
-const TASK = /^\s*- \[([ xX])\]/
+const TASK = /^\s*- \[([ xX])\]\s+(T\d+)\b/
 const HEADING = /^##\s+(.+?)\s*$/
 
 const statusOf = (text: string) =>
@@ -65,17 +65,26 @@ const readOr = ($: EngineInterface, path: string) =>
 
 const countTasks = (text: string) => {
   const sections: Section[] = []
-  let current: Section = { name: 'Tasks', done: 0, total: 0 }
+  let current: Section = { name: 'Tasks', done: 0, total: 0, taskIds: [] }
+  let fence: string | undefined
   for (const line of text.split('\n')) {
+    const marker = line.match(/^\s*(`{3,}|~{3,})/)?.[1]
+    if (marker) {
+      if (!fence) fence = marker
+      else if (marker[0] === fence[0] && marker.length >= fence.length) fence = undefined
+      continue
+    }
+    if (fence) continue
     const heading = line.match(HEADING)
     if (heading) {
       if (current.total > 0) sections.push(current)
-      current = { name: heading[1] ?? 'Tasks', done: 0, total: 0 }
+      current = { name: heading[1] ?? 'Tasks', done: 0, total: 0, taskIds: [] }
       continue
     }
     const task = line.match(TASK)
-    if (!task) continue
+    if (!task || /^Deferred\b/i.test(current.name)) continue
     current.total += 1
+    current.taskIds.push(task[2]!)
     if (task[1] !== ' ') current.done += 1
   }
   if (current.total > 0) sections.push(current)
@@ -107,10 +116,11 @@ const scanDir = async (
   return Promise.all(
     folders.map(async folder => {
       const base = `${dir}/${folder.name}`
-      const [specText, planText, tasksText] = await Promise.all([
+      const [specText, planText, tasksText, files] = await Promise.all([
         readOr($, `${base}/spec.md`),
         readOr($, `${base}/plan.md`),
         readOr($, `${base}/tasks.md`),
+        $.fs.list(base).catch(() => []),
       ])
       const tasks = countTasks(tasksText ?? '')
       const spec = {
@@ -121,6 +131,9 @@ const scanDir = async (
         specStatus: specText ? statusOf(specText) : 'missing',
         planStatus: planText === undefined ? undefined : statusOf(planText),
         hasTasks: tasksText !== undefined,
+        modifiedAt: files.find(one => one.name === 'tasks.md')?.mtimeMs ??
+          files.find(one => one.name === 'plan.md')?.mtimeMs ??
+          files.find(one => one.name === 'spec.md')?.mtimeMs ?? folder.mtimeMs,
         ...tasks,
       }
 
@@ -145,7 +158,32 @@ const refresh = async ($: EngineInterface) => {
   ])
   const list = [...live, ...archived].sort((a, b) => a.id.localeCompare(b.id))
   await update($, specs, () => list)
-  $.ui.status(list.length === 0 ? undefined : `mspec: ${summaryOf(list)}`)
+  const current = await read($, active)
+  const selected = list.find(one => one.id === current?.id) ??
+    [...live].sort((a, b) => b.modifiedAt - a.modifiedAt || b.id.localeCompare(a.id))[0]
+  if (!selected) {
+    $.ui.status(undefined)
+    return
+  }
+  const section = sectionOf(selected, current?.id === selected.id ? current : null)
+  const progress = selected.hasTasks
+    ? `${selected.done}/${selected.total} tasks`
+    : LABEL[selected.stage]
+  $.ui.status(`mspec: ${selected.id} · ${progress}${section ? ` · ${section.name}` : ''}`)
+}
+
+const sectionOf = (spec: Spec, current: Active | null) => {
+  if (current?.story) {
+    const scoped = spec.sections.find(one =>
+      new RegExp(`^${current.story}\\b`, 'i').test(one.name),
+    )
+    if (scoped) return scoped
+  }
+  if (current?.task) {
+    const scoped = spec.sections.find(one => one.taskIds.includes(current.task!))
+    if (scoped) return scoped
+  }
+  return spec.sections.find(one => one.done < one.total)
 }
 
 // A spec folder is `<id>-<short-name>`, the id a ticket key (`PROJ-123`) or a
@@ -170,9 +208,31 @@ const markActive = async (
   id: string,
   via: string,
   isRunning: boolean,
+  scope: string = '',
 ) => {
   const at = await $.clock.now()
-  await update($, active, () => ({ id, via, at, isRunning }))
+  const story = scope.match(/\bUS\d+\b/i)?.[0]?.toUpperCase()
+  const task = scope.match(/\bT\d+\b/i)?.[0]?.toUpperCase()
+  await update($, active, () => ({ id, via, at, isRunning, story, task }))
+}
+
+const trackSkill = async ($: EngineInterface, skill: string, args = '') => {
+  const name = skill.split(':').pop() ?? ''
+  if (!['mspec-spec', 'mspec-plan', 'mspec-tasks', 'mspec-implement', 'mspec-archive'].includes(name)) return
+  if (name === 'mspec-archive' && /^(init|audit)\b/.test(args)) return
+  await refresh($)
+  const list = (await read($, specs)).filter(one => one.stage !== 'archived')
+  const named = specNamedIn(list, args)
+  const candidates = name === 'mspec-implement'
+    ? list.filter(one => one.hasTasks)
+    : list
+  const selected = named ?? [...candidates].sort(
+    (a, b) => b.modifiedAt - a.modifiedAt || b.id.localeCompare(a.id),
+  )[0]
+  if (selected) {
+    await markActive($, selected.id, `/${skill}`, true, args)
+    await refresh($)
+  }
 }
 
 const bar = (done: number, total: number, width: number) => {
@@ -201,7 +261,11 @@ const track = async ($: EngineInterface, e: { tool: string } & object) => {
     const current = await read($, active)
     const via =
       current && current.id === touched ? current.via : `edit ${e.tool}`
-    await markActive($, touched, via, true)
+    if (current?.id === touched) {
+      await update($, active, one => one ? { ...one, isRunning: true } : one)
+    } else {
+      await markActive($, touched, via, true)
+    }
     await refresh($)
   } else if (
     e.tool === 'Bash' &&
@@ -221,8 +285,8 @@ export const register: Register = on => {
       description: 'Show the status of every .mspec spec in a pane',
     })
     const hasSpecs = await $.fs.exists(SPECS_DIR)
+    await refresh($)
     if (hasSpecs) {
-      await refresh($)
       void $.ui.open({ id: PANE, title: 'Specs' })
     }
     timer?.cancel()
@@ -245,14 +309,14 @@ export const register: Register = on => {
   })
 
   on('tool.call', { tool: 'Skill' }, async ($, e, next) => {
-    if (e.skill.startsWith('mspec-')) {
-      // Tracking must never block the skill itself.
-      await (async () => {
-        const list = await read($, specs)
-        const named = specNamedIn(list, e.args ?? '')
-        if (named) await markActive($, named.id, `/${e.skill}`, true)
-      })().catch(() => undefined)
-    }
+    // Tracking must never block the skill itself.
+    await trackSkill($, e.skill, e.args).catch(() => undefined)
+
+    return next(e)
+  })
+
+  on('command.run', async ($, e, next) => {
+    await trackSkill($, e.command, e.args).catch(() => undefined)
 
     return next(e)
   })

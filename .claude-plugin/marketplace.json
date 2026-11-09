@@ -5,7 +5,7 @@
     {
       "name": "mspec-status",
       "source": "./mspec-status",
-      "description": "A Claude Code pane and status line showing each .mspec spec's stage and task progress"
+      "description": "Current working spec, task progress and user story in Claude Code, plus a pane for all specs"
     }
   ]
 }
